@@ -38,7 +38,7 @@ export default function FormPreview({ config }: Props) {
   }, [config.fields]);
 
   useEffect(() => {
-    saveToStorage({ config, formState });
+    saveToStorage({ config, formState, timestamp: Date.now() });
   }, [config, formState]);
 
   const loadFieldOptions = async (
@@ -62,10 +62,13 @@ export default function FormPreview({ config }: Props) {
   const handleFieldChange = async (fieldId: string, value: any) => {
     const newFormState = { ...formState, [fieldId]: value };
     setFormState(newFormState);
-    saveToStorage({ config, formState: newFormState });
+    saveToStorage({ config, formState: newFormState, timestamp: Date.now() });
 
     for (const rule of config.rules) {
       if (rule.sourceFieldId === fieldId && rule.event === 'change') {
+        if (rule.sourceFieldType && config.fields.find(field => field.id === fieldId)?.type !== rule.sourceFieldType) {
+          continue; // Skip if the source field type does not match
+        }
         if (rule.action === 'populateOptions' && rule.apiConfig) {
           const params = rule.apiConfig.paramMapping
             ? Object.fromEntries(
@@ -100,14 +103,15 @@ export default function FormPreview({ config }: Props) {
           case 'disable':
             setDisabledFields((prev) => new Set([...prev, rule.targetFieldId]));
             break;
-          case 'setValue':
+          case 'setValue': {
             const newState = {
               ...newFormState,
               [rule.targetFieldId]: rule.impact,
             };
             setFormState(newState);
-            saveToStorage({ config, formState: newState });
+            saveToStorage({ config, formState: newState, timestamp: Date.now() });
             break;
+          }
         }
       }
     }
@@ -138,7 +142,7 @@ export default function FormPreview({ config }: Props) {
             value={formState[field.id] ?? field.defaultValue ?? 0}
           />
         );
-      case 'select':
+      case 'select': {
         console.log('fieldOptions:', fieldOptions, ',field:', field);
         const options =
           fieldOptions[field.id] ||
@@ -159,6 +163,7 @@ export default function FormPreview({ config }: Props) {
             ))}
           </select>
         );
+      }
       case 'checkbox':
         return (
           <input

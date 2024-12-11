@@ -1,21 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { FieldType, FormField, ApiConfig } from '../../types/form';
 
 interface Props {
   onAdd: (field: FormField) => void;
+  fieldToEdit?: FormField; // Add this line
 }
 
-export default function FieldDefinition({ onAdd }: Props) {
-  const [field, setField] = useState<FormField>({
-    id: '',
-    label: '',
-    type: 'text',
-    defaultValue: '',
-    visible: true,
-    options: [],
-  });
+export default function FieldDefinition({ onAdd, fieldToEdit }: Props) {
+  const [field, setField] = useState<FormField>(
+    fieldToEdit || {
+      id: '',
+      label: '',
+      type: 'text',
+      defaultValue: '',
+      visible: true,
+      options: [],
+    }
+  );
   const [showApiConfig, setShowApiConfig] = useState(false);
+
+  useEffect(() => {
+    if (fieldToEdit) {
+      setField(fieldToEdit);
+      setShowApiConfig(!!fieldToEdit.apiConfig);
+    }
+  }, [fieldToEdit]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

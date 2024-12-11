@@ -1,29 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { FormField, FormRule, ActionType, ApiConfig } from '../../types/form';
 
 interface Props {
   fields: FormField[];
-  onAdd: (rule: FormRule) => void;
+  onAdd: (rule: FormRule, index?: number) => void;
+  ruleToEdit?: { rule: FormRule; index: number };
 }
 
-export default function RuleDefinition({ fields, onAdd }: Props) {
+export default function RuleDefinition({ fields, onAdd, ruleToEdit }: Props) {
   const [rule, setRule] = useState<FormRule>({
     sourceFieldId: '',
+    sourceFieldType: undefined, // Add this line
     event: 'change',
     action: 'show',
     targetFieldId: '',
+    impact: null,
   });
   const [showApiConfig, setShowApiConfig] = useState(false);
 
+  useEffect(() => {
+    if (ruleToEdit) {
+      setRule(ruleToEdit.rule);
+      setShowApiConfig(!!ruleToEdit.rule.apiConfig);
+    }
+  }, [ruleToEdit]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd(rule);
+    if (ruleToEdit) {
+      onAdd(rule, ruleToEdit.index);
+    } else {
+      onAdd(rule);
+    }
     setRule({
       sourceFieldId: '',
+      sourceFieldType: undefined, // Add this line
       event: 'change',
       action: 'show',
       targetFieldId: '',
+      impact: null,
     });
     setShowApiConfig(false);
     document.getElementById('rule-definition')?.classList.add('hidden');
@@ -60,7 +76,14 @@ export default function RuleDefinition({ fields, onAdd }: Props) {
             <label className="block text-sm font-medium text-gray-700">Source Field</label>
             <select
               value={rule.sourceFieldId}
-              onChange={e => setRule(prev => ({ ...prev, sourceFieldId: e.target.value }))}
+              onChange={e => {
+                const selectedField = fields.find(field => field.id === e.target.value);
+                setRule(prev => ({
+                  ...prev,
+                  sourceFieldId: e.target.value,
+                  sourceFieldType: selectedField?.type, // Add this line
+                }));
+              }}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             >
@@ -103,6 +126,7 @@ export default function RuleDefinition({ fields, onAdd }: Props) {
               <option value="disable">Disable</option>
               <option value="setValue">Set Value</option>
               <option value="populateOptions">Populate Options</option>
+              <option value="toggle">Toggle</option> {/* Add this line */}
             </select>
           </div>
 
@@ -115,11 +139,13 @@ export default function RuleDefinition({ fields, onAdd }: Props) {
               required
             >
               <option value="">Select a field</option>
-              {fields.map(field => (
-                <option key={field.id} value={field.id}>
-                  {field.label}
-                </option>
-              ))}
+              {fields
+                .filter(field => field.id !== rule.sourceFieldId) // Filter out the source field
+                .map(field => (
+                  <option key={field.id} value={field.id}>
+                    {field.label}
+                  </option>
+                ))}
             </select>
           </div>
 

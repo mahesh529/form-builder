@@ -19,10 +19,11 @@ export interface FormField {
   apiConfig?: ApiConfig; // For fields that get options from API
 }
 
-export type ActionType = 'show' | 'hide' | 'enable' | 'disable' | 'setValue' | 'populateOptions';
+export type ActionType = 'show' | 'hide' | 'enable' | 'disable' | 'setValue' | 'populateOptions' | 'toggle';
 
 export interface FormRule {
   sourceFieldId: string;
+  sourceFieldType?: FieldType; // Add this line
   event: 'change' | 'focus' | 'blur';
   condition?: {
     operator: 'equals' | 'notEquals' | 'greaterThan' | 'lessThan';
