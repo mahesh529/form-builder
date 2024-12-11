@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FormConfig } from '../../types/form';
-import { fetchData, extractDataFromResponse } from '../../utils/api';
+import { fetchData, extractDataFromResponse, getNestedValue } from '../../utils/api'; // Correct import
 import { saveToStorage, loadFromStorage } from '../../utils/storage';
 
 interface Props {
@@ -31,6 +31,8 @@ export default function FormPreview({ config }: Props) {
 
       if (field.type === 'select' && field.apiConfig?.url) {
         loadFieldOptions(field.id, field.apiConfig);
+      } else if (field.type === 'text' && field.apiConfig?.url) {
+        loadFieldValue(field.id, field.apiConfig);
       }
     });
 
@@ -57,6 +59,16 @@ export default function FormPreview({ config }: Props) {
       id: `${fieldId}-${opt.value}-${index}`,
     }));
     setFieldOptions((prev) => ({ ...prev, [fieldId]: options }));
+  };
+
+  const loadFieldValue = async (
+    fieldId: string,
+    apiConfig: NonNullable<(typeof config.fields)[0]['apiConfig']>,
+    params?: Record<string, string>
+  ) => {
+    const data = await fetchData(apiConfig.url, apiConfig.method, params);
+    const value = getNestedValue(data, apiConfig.responseMapping || ''); // Use getNestedValue
+    setFormState((prev) => ({ ...prev, [fieldId]: value }));
   };
 
   const handleFieldChange = async (fieldId: string, value: any) => {
@@ -107,6 +119,15 @@ export default function FormPreview({ config }: Props) {
             const newState = {
               ...newFormState,
               [rule.targetFieldId]: rule.impact,
+            };
+            setFormState(newState);
+            saveToStorage({ config, formState: newState, timestamp: Date.now() });
+            break;
+          }
+          case 'toggle': {
+            const newState = {
+              ...newFormState,
+              [rule.targetFieldId]: !newFormState[rule.targetFieldId],
             };
             setFormState(newState);
             saveToStorage({ config, formState: newState, timestamp: Date.now() });

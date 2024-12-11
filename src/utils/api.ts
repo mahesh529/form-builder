@@ -26,7 +26,7 @@ export async function fetchData(
   }
 }
 
-function getNestedValue(obj: any, path: string) {
+export function getNestedValue(obj: any, path: string) {
   return path.split('.').reduce((acc, key) => acc && acc[key], obj);
 }
 

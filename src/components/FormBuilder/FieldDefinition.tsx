@@ -184,6 +184,47 @@ export default function FieldDefinition({ onAdd, fieldToEdit }: Props) {
             </div>
           )}
 
+          {field.type === 'text' && (
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={showApiConfig}
+                  onChange={e => setShowApiConfig(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-900">
+                  Populate value from API
+                </label>
+              </div>
+
+              {showApiConfig && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">API URL</label>
+                    <input
+                      type="url"
+                      value={field.apiConfig?.url || ''}
+                      onChange={e => handleApiConfigChange({ url: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Response Path</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., data.value"
+                      value={field.apiConfig?.responseMapping || ''}
+                      onChange={e => handleApiConfigChange({ responseMapping: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Default Value</label>
             <input
